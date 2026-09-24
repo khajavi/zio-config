@@ -106,6 +106,22 @@ ThisBuild / ciCheckArtifactsBuildSteps := Seq(
   )
 )
 
+// The plugin default (`docs/buildWebsite`, a full Docusaurus site build) crashes: the `docs`
+// project's classpath is evicted to a scala-library/scala-reflect newer than the pinned 2.13.8
+// compiler, and mdoc's compiler internals hit a real NoSuchMethodError at runtime
+// (PermittedSubclassesATTR, added in later 2.13.x for Java 17 sealed-class support) rather than
+// just the SIP-51 warning `allowUnsafeScalaLibUpgrade` demotes elsewhere. Matching the pinned
+// toolchain (scalajs 1.11.0, scala-native 0.4.10, kind-projector, semanticdb-scalac, silencer) up
+// to a 2.13.x patch new enough to avoid the eviction is a much larger, unrelated upgrade. The old
+// handwritten workflow only ever ran `docs/compileDocs` (mdoc compilation, no Docusaurus build),
+// which doesn't hit this path, so use that here too.
+ThisBuild / ciCheckWebsiteBuildProcess := Seq(
+  Step.SingleStep(
+    name = "Check website build process",
+    run = Some("sbt --no-colors docs/compileDocs")
+  )
+)
+
 lazy val createProductBuilder = taskKey[Unit]("Generate code for ProductBuilder.scala")
 
 createProductBuilder := {
