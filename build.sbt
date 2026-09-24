@@ -26,6 +26,12 @@ inThisBuild(
 
 ThisBuild / ciEnabledBranches := Seq("master")
 
+// sbt 1.9+'s SIP-51 check aborts when a project's scala-library is evicted to a version newer
+// than the pinned 2.13.8 compiler (e.g. by a recently-bumped transitive dependency). Bumping
+// Scala213 itself instead breaks the silencer-lib dependency, which is only published for a
+// handful of exact 2.13.x patch versions. This is sbt's own documented escape hatch for that case.
+ThisBuild / allowUnsafeScalaLibUpgrade := true
+
 // Preserves the exact test matrix the handwritten workflow ran: 2 JDKs x 4 Scala versions x 3
 // platforms, dispatching to the existing testJS/testJVM211/.../testJVM3x aliases. zio-sbt-ci's
 // built-in per-module Scala-version matrix has no platform axis, so it can't express this build's
@@ -76,6 +82,27 @@ ThisBuild / ciTestJobs := Seq(
         run = Some("sbt ++${{ matrix.scala }}! testJVM3x")
       )
     )
+  )
+)
+
+// The plugin defaults to `+Test/compile` / `+publishLocal` (cross-building every module across
+// root's full crossScalaVersions in one sweep). That sweep hits pre-existing, unrelated breakage
+// in this build: zioConfigMagnoliaJVM/zioConfigNative fail to resolve their own sibling modules as
+// external `dev.zio` SNAPSHOT coordinates instead of project references once compiled outside their
+// curated per-version root2-11/root2-12/root2-13 aggregates, and org.scala-native:scalalib_native0.4_2.11:0.4.10
+// is no longer published. The per-module `test` job above already exercises every supported
+// module/version/platform combination via the curated testJS/testJVM2xx/testJVM3x aliases, so the
+// `build` job only needs a single-version smoke compile/publish on the default Scala version.
+ThisBuild / ciCheckArtifactsCompilationSteps := Seq(
+  Step.SingleStep(
+    name = "Check all code compiles",
+    run = Some("sbt --no-colors Test/compile")
+  )
+)
+ThisBuild / ciCheckArtifactsBuildSteps := Seq(
+  Step.SingleStep(
+    name = "Check artifacts build process",
+    run = Some("sbt --no-colors publishLocal")
   )
 )
 

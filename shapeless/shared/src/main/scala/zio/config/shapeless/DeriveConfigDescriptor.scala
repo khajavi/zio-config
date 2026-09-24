@@ -126,7 +126,7 @@ trait DeriveConfigDescriptor {
     Descriptor(listDesc(implicitly[Descriptor[A]].configDescriptor))
 
   implicit def implicitChunkDesc[A: Descriptor]: Descriptor[Chunk[A]] =
-    implicitListDesc[A].transform(Chunk.from(_), _.toList)
+    implicitListDesc[A].transform(Chunk.fromIterable(_), _.toList)
 
   implicit def implicitSetDesc[A: Descriptor]: Descriptor[Set[A]] =
     Descriptor(setDesc(implicitly[Descriptor[A]].configDescriptor))
