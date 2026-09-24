@@ -402,7 +402,7 @@ object Descriptor {
             acc orElse f(n)
           }
         case head :: tail =>
-          def nest(name: String)(unwrapped: ConfigDescriptor[Any]) =
+          def nest(name: String)(unwrapped: ConfigDescriptor[Any])                               =
             if (caseClass.isValueClass) unwrapped
             else nested(name)(unwrapped)
           def makeNestedParam(name: String, unwrapped: ConfigDescriptor[Any], optional: Boolean) =
