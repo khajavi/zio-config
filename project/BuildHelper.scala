@@ -292,7 +292,11 @@ object BuildHelper {
   def nativeSettings = Seq(
     Test / skip := true,
     doc / skip := true,
-    Compile / doc / sources := Seq.empty
+    Compile / doc / sources := Seq.empty,
+    // scalafix's semantic rules fail with MissingSemanticdbError on Scala Native (its own compiler
+    // backend doesn't cooperate with semanticdb-scalac to emit .semanticdb files here). The shared
+    // sources scalafix would check are already linted via the JVM/JS builds of the same modules.
+    semanticdbEnabled := false
   )
 
   val scalaReflectTestSettings: List[Setting[_]] = List(
