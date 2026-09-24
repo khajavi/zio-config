@@ -294,6 +294,11 @@ lazy val zioConfigJVM    = zioConfig.jvm
   .settings(libraryDependencies += "dev.zio" %%% "zio-test-sbt" % zioVersion % Test)
 lazy val zioConfigNative = zioConfig.native
   .settings(nativeSettings)
+  // scalafix's semantic rules can't run on Scala Native: its own compiler backend doesn't
+  // cooperate with semanticdb-scalac to emit .semanticdb files here (MissingSemanticdbError with
+  // semanticdb enabled, InvalidArgument without it - neither works). The same shared sources are
+  // already linted via the JVM/JS builds of the same modules.
+  .disablePlugins(ScalafixPlugin)
 
 lazy val zioConfigAws    = crossProject(JVMPlatform)
   .in(file("aws"))
