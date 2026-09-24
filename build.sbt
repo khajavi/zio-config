@@ -39,7 +39,7 @@ ThisBuild / ciTestJobs := Seq(
       Strategy(
         matrix = Map(
           "java"     -> List("8", "11"),
-          "scala"    -> List("2.11.12", "2.12.16", "2.13.8", "3.2.0"),
+          "scala"    -> List("2.11.12", "2.12.16", "2.13.8", "3.2.2"),
           "platform" -> List("JS", "JVM", "Native")
         ),
         failFast = false
@@ -127,9 +127,9 @@ addCommandAlias(
   ";zioConfigJVM/test;zioConfigTypesafeJVM/test;zioConfigDerivationJVM/test;zioConfigYamlJVM/test;zioConfigAwsJVM/test;zioConfigZioAwsJVM/test"
 )
 
-val awsVersion        = "1.12.360"
+val awsVersion        = "1.12.395"
 val zioAwsVersion     = "5.19.8.1"
-val zioVersion        = "2.0.5"
+val zioVersion        = "2.0.9"
 val magnoliaVersion   = "0.17.0"
 val refinedVersion    = "0.10.1"
 val pureconfigVersion = "0.16.0"
@@ -167,7 +167,8 @@ lazy val scala211projects =
     zioConfigTypesafeJVM,
     zioConfigShapelessJVM,
     zioConfigDerivationJVM,
-    zioConfigYamlJVM
+    zioConfigYamlJVM,
+    docs
   )
 lazy val scala212projects = scala211projects ++ Seq[ProjectReference](
   zioConfigGenJVM,
@@ -192,7 +193,8 @@ lazy val scala3projects =
     zioConfigMagnoliaJVM,
     zioConfigScalazJVM,
     zioConfigTypesafeJVM,
-    zioConfigYamlJVM
+    zioConfigYamlJVM,
+    docs
   )
 
 lazy val root =
@@ -449,7 +451,7 @@ lazy val zioConfigYaml    = crossProject(JVMPlatform)
   .settings(crossProjectSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "org.snakeyaml" % "snakeyaml-engine" % "2.3",
+      "org.snakeyaml" % "snakeyaml-engine" % "2.6",
       "dev.zio"      %% "zio-test"         % zioVersion % Test,
       "dev.zio"      %% "zio-test-sbt"     % zioVersion % Test
     ),
@@ -467,7 +469,7 @@ lazy val zioConfigScalaz    = crossProject(JSPlatform, JVMPlatform, NativePlatfo
   .settings(
     crossScalaVersions --= Seq(Scala211, Scala212),
     libraryDependencies ++= Seq(
-      "org.scalaz" %% "scalaz-core"  % "7.4.0-M12",
+      "org.scalaz" %% "scalaz-core"  % "7.4.0-M13",
       "dev.zio"    %% "zio-test"     % zioVersion % Test,
       "dev.zio"    %% "zio-test-sbt" % zioVersion % Test
     ),
@@ -538,6 +540,7 @@ lazy val docs = project
     scalacOptions -= "-Xfatal-warnings",
     magnoliaDependencies,
     refinedDependencies,
+    crossScalaVersions := (zioConfigJVM / crossScalaVersions).value,
     projectName := "ZIO Config",
     mainModuleName := (zioConfigJVM / moduleName).value,
     projectStage := ProjectStage.ProductionReady,

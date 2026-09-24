@@ -10,7 +10,7 @@ addSbtPlugin("de.heikoseeberger"                 % "sbt-header"                 
 addSbtPlugin("org.portable-scala"                % "sbt-scala-native-crossproject" % "1.2.0")
 addSbtPlugin("org.portable-scala"                % "sbt-scalajs-crossproject"      % "1.2.0")
 addSbtPlugin("org.scala-js"                      % "sbt-scalajs"                   % "1.11.0")
-addSbtPlugin("org.scala-native"                  % "sbt-scala-native"              % "0.4.5")
+addSbtPlugin("org.scala-native"                  % "sbt-scala-native"              % "0.4.10")
 addSbtPlugin("org.scalameta"                     % "sbt-mdoc"                      % "2.3.3")
 addSbtPlugin("org.scalameta"                     % "sbt-scalafmt"                  % "2.4.6")
 addSbtPlugin("pl.project13.scala"                % "sbt-jcstress"                  % "0.2.0")
@@ -18,6 +18,6 @@ addSbtPlugin("pl.project13.scala"                % "sbt-jmh"                    
 addSbtPlugin("dev.zio"                           % "zio-sbt-website"               % "0.8.0")
 addSbtPlugin("dev.zio"                           % "zio-sbt-ci"                    % "0.8.0")
 
-libraryDependencies += "org.snakeyaml" % "snakeyaml-engine" % "2.3"
+libraryDependencies += "org.snakeyaml" % "snakeyaml-engine" % "2.6"
 
 resolvers += Resolver.sonatypeRepo("public")
