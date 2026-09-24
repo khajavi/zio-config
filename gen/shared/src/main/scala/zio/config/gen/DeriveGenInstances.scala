@@ -1,7 +1,7 @@
 package zio.config.gen
 
-import zio.test.magnolia.DeriveGen
 import zio.test.Gen
+import zio.test.magnolia.DeriveGen
 
 import java.io.File
 import java.net.{URI, URL}
