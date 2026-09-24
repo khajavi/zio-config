@@ -1,4 +1,6 @@
 import BuildHelper._
+import zio.sbt.ZioSbtCiPlugin.{CacheDependencies, Checkout, SetupJava, SetupSBT}
+import zio.sbt.githubactions.{Condition, Job, Step, Strategy}
 
 inThisBuild(
   List(
@@ -17,6 +19,61 @@ inThisBuild(
         "John De Goes",
         "john@degoes.net",
         url("http://degoes.net")
+      )
+    )
+  )
+)
+
+ThisBuild / ciEnabledBranches := Seq("master")
+
+// Preserves the exact test matrix the handwritten workflow ran: 2 JDKs x 4 Scala versions x 3
+// platforms, dispatching to the existing testJS/testJVM211/.../testJVM3x aliases. zio-sbt-ci's
+// built-in per-module Scala-version matrix has no platform axis, so it can't express this build's
+// JVM/JS/Native cross-project layout on its own.
+ThisBuild / ciTestJobs := Seq(
+  Job(
+    id = "test",
+    name = "Test",
+    jobTimeout = Some(30),
+    strategy = Some(
+      Strategy(
+        matrix = Map(
+          "java"     -> List("8", "11"),
+          "scala"    -> List("2.11.12", "2.12.16", "2.13.8", "3.2.0"),
+          "platform" -> List("JS", "JVM", "Native")
+        ),
+        failFast = false
+      )
+    ),
+    steps = Seq(
+      Checkout.value,
+      SetupJava("${{ matrix.java }}"),
+      SetupSBT,
+      CacheDependencies,
+      Step.SingleStep(
+        name = "Run JS tests",
+        condition = Some(Condition.Expression("matrix.platform == 'JS' && !startsWith(matrix.scala, '3.')")),
+        run = Some("sbt ++${{ matrix.scala }}! testJS")
+      ),
+      Step.SingleStep(
+        name = "Run 2.11 JVM tests",
+        condition = Some(Condition.Expression("matrix.platform == 'JVM' && startsWith(matrix.scala, '2.11')")),
+        run = Some("sbt ++${{ matrix.scala }}! testJVM211")
+      ),
+      Step.SingleStep(
+        name = "Run 2.12 JVM tests",
+        condition = Some(Condition.Expression("matrix.platform == 'JVM' && startsWith(matrix.scala, '2.12')")),
+        run = Some("sbt ++${{ matrix.scala }}! testJVM212")
+      ),
+      Step.SingleStep(
+        name = "Run 2.13 JVM tests",
+        condition = Some(Condition.Expression("matrix.platform == 'JVM' && startsWith(matrix.scala, '2.13')")),
+        run = Some("sbt ++${{ matrix.scala }}! testJVM213")
+      ),
+      Step.SingleStep(
+        name = "Run 3.x JVM tests",
+        condition = Some(Condition.Expression("matrix.platform == 'JVM' && startsWith(matrix.scala, '3.')")),
+        run = Some("sbt ++${{ matrix.scala }}! testJVM3x")
       )
     )
   )
@@ -42,6 +99,7 @@ createProductBuilder := {
 addCommandAlias("fmt", "; scalafmtSbt; scalafmt; test:scalafmt")
 addCommandAlias("fix", "; all compile:scalafix test:scalafix; all scalafmtSbt scalafmtAll")
 addCommandAlias("check", "; scalafmtSbtCheck; scalafmtCheckAll; compile:scalafix --check; test:scalafix --check")
+addCommandAlias("lint", "check")
 addCommandAlias(
   "checkAll",
   "; ++2.11.12; project root2-11; check; ++2.12.13; project root2-12; check; ++2.13.5; project root2-13; check"
@@ -142,6 +200,7 @@ lazy val root =
     .in(file("."))
     .settings(publish / skip := true)
     .aggregate(scala213projects: _*)
+    .enablePlugins(ZioSbtCiPlugin)
 
 lazy val `root2-11` =
   project
